@@ -15,7 +15,8 @@ export default function TypingTestApp() {
 	const [wpm, setWpm] = useState<number>(0);
 	const [correctness, setCorrectness] = useState<boolean[]>([]);
 	const [hasStarted, setHasStarted] = useState<boolean>(false);
-	const containerRef = useRef<HTMLDivElement>(null);
+	const [showResults, setShowResults] = useState<boolean>(false);
+	const containerRef = useRef<any>(null);
 
 	useEffect(() => {
 		let timer: any;
@@ -24,11 +25,14 @@ export default function TypingTestApp() {
 		} else if (timeLeft === 0) {
 			setIsRunning(false);
 			calculateWPM();
+			setShowResults(true);
 		}
 		return () => clearInterval(timer);
 	}, [isRunning, timeLeft]);
 
-	const handleKeyPress = (e: React.KeyboardEvent) => {
+	const handleKeyPress = (e: any) => {
+		if (timeLeft <= 0) return;
+
 		if (!isRunning && timeLeft > 0) setIsRunning(true);
 
 		if (e.key === "Backspace") {
@@ -57,6 +61,7 @@ export default function TypingTestApp() {
 		setWpm(0);
 		setCorrectness([]);
 		setHasStarted(false);
+		setShowResults(false);
 	};
 
 	const getHighlightedText = () => {
@@ -81,6 +86,10 @@ export default function TypingTestApp() {
 		});
 	};
 
+	const correctChars = correctness.filter(Boolean).length;
+	const totalChars = currentCharIndex;
+	const accuracy = totalChars > 0 ? (correctChars / totalChars) * 100 : 0;
+	console.log(containerRef);
 	return (
 		<div
 			className="w-full min-h-screen content-center"
@@ -92,7 +101,7 @@ export default function TypingTestApp() {
 				<h1 className="text-2xl font-bold mb-4 text-center">Typing Test</h1>
 
 				<div className="relative">
-					<div className="text-xl w-full bg-white p-4 rounded shadow-sm border border-gray-300">
+					<div className="text-xl w-full bg-white p-4 rounded border border-gray-300">
 						{getHighlightedText()}
 					</div>
 					{!hasStarted && (
@@ -114,6 +123,20 @@ export default function TypingTestApp() {
 					<p className="text-lg font-medium">Time Left: {timeLeft}s</p>
 					<p className="text-lg font-medium">WPM: {wpm}</p>
 				</div>
+
+				{showResults && (
+					<Card className="mt-4">
+						<CardContent className="p-4 space-y-2">
+							<h2 className="text-xl font-bold mb-2">Test Results</h2>
+							<p className="text-lg">WPM: {wpm}</p>
+							<p className="text-lg">Accuracy: {accuracy.toFixed(1)}%</p>
+							<p className="text-lg">Correct characters: {correctChars}</p>
+							<p className="text-lg">
+								Incorrect characters: {totalChars - correctChars}
+							</p>
+						</CardContent>
+					</Card>
+				)}
 
 				<div className="flex justify-center mt-6">
 					<Button
